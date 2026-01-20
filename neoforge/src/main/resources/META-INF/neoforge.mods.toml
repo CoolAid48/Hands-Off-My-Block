@@ -1,0 +1,32 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+[[mods]]
+modId = "handsoffmyblock"
+version = "${version}"
+displayName = "Hands Off My Block"
+authors = "CoolAid48"
+description = '''
+
+'''
+#logoFile = ""
+
+[[dependencies.handsoffmyblock]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.handsoffmyblock]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.11,)"
+ordering = "NONE"
+side = "BOTH"
+
+
+[[mixins]]
+config = "handsoffmyblock.mixins.json"
