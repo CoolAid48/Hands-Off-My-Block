@@ -3,9 +3,8 @@
   "package": "coolaid.handsoffmyblock.mixin",
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
-  "client": [
-  ],
   "mixins": [
+    "PoiStorageMixin"
   ],
   "injectors": {
     "defaultRequire": 1
