@@ -16,9 +16,6 @@
   "entrypoints": {
     "main": [
       "coolaid.handsoffmyblock.fabric.HandsOffMyBlockFabric"
-    ],
-    "client": [
-      "coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient"
     ]
   },
   "mixins": [

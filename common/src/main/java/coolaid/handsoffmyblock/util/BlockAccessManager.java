@@ -1,4 +1,4 @@
-package coolaid.handsoffmyblock;
+package coolaid.handsoffmyblock.util;
 
 import net.minecraft.core.BlockPos;
 
