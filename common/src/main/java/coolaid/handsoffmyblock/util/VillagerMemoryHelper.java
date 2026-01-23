@@ -16,7 +16,7 @@ public class VillagerMemoryHelper {
 
         for (Villager villager : level.getEntitiesOfClass(Villager.class, box)) {
 
-            // Clear job (workstation)/home (bed) from villager memory
+            // Clear job/home memories
             villager.getBrain().eraseMemory(MemoryModuleType.JOB_SITE);
             villager.getBrain().eraseMemory(MemoryModuleType.POTENTIAL_JOB_SITE);
             if (isBed) villager.getBrain().eraseMemory(MemoryModuleType.HOME);

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "handsoffmyblock",
-  "version": "${version}",
+  "version": "0.1.0",
   "name": "Hands Off My Block",
   "description": "",
   "authors": [
@@ -16,18 +16,17 @@
   "entrypoints": {
     "main": [
       "coolaid.handsoffmyblock.fabric.HandsOffMyBlockFabric"
+    ],
+    "client": [
+      "coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient"
     ]
   },
   "mixins": [
     "handsoffmyblock.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.18.0",
+    "fabricloader": ">=0.17.3",
     "minecraft": "~1.21.11",
-    "java": ">=21",
     "fabric-api": "*"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

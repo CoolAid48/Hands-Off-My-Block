@@ -2,22 +2,27 @@ package coolaid.handsoffmyblock.util;
 
 import net.minecraft.core.BlockPos;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class BlockAccessManager {
+public final class BlockAccessManager {
 
-    private static final Set<BlockPos> blockedPositions = new HashSet<>();
+    private static final Set<BlockPos> BLOCKED = new HashSet<>();
+
+    public static boolean isBlocked(BlockPos pos) {
+        return BLOCKED.contains(pos);
+    }
 
     public static void markBlock(BlockPos pos) {
-        blockedPositions.add(pos.immutable());
+        BLOCKED.add(pos.immutable());
     }
 
     public static void unmarkBlock(BlockPos pos) {
-        blockedPositions.remove(pos);
+        BLOCKED.remove(pos);
     }
 
-    public static boolean isBlocked(BlockPos pos) {
-        return blockedPositions.contains(pos);
+    public static Set<BlockPos> getBlocked() {
+        return Collections.unmodifiableSet(BLOCKED);
     }
 }
