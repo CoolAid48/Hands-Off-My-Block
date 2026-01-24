@@ -1,7 +1,9 @@
 package coolaid.handsoffmyblock.mixin;
 
 import coolaid.handsoffmyblock.util.BlockAccessManager;
+import coolaid.handsoffmyblock.util.ServerLevelTracker;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,7 +18,8 @@ public class PoiManagerMixin {
 
     @Inject(method = "getType", at = @At("HEAD"), cancellable = true)
     private void handsOffMyBlock_blockPOI(BlockPos pos, CallbackInfoReturnable<Optional<PoiType>> cir) {
-        if (BlockAccessManager.isBlocked(pos)) {
+        ServerLevel overworld = ServerLevelTracker.getLevelForPos(pos);
+        if (overworld != null && BlockAccessManager.isBlocked(overworld, pos)) {
             cir.setReturnValue(Optional.empty());
         }
     }

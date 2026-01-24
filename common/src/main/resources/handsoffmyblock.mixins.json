@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "mixins": [
-    "PoiManagerMixin"
+    "PoiManagerMixin",
+    "ServerLevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -4,9 +4,11 @@ import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
 import coolaid.handsoffmyblock.fabric.client.ConfigScreen;
 import coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient;
 import coolaid.handsoffmyblock.util.BlockAccessManager;
+import coolaid.handsoffmyblock.util.BlockSets;
 import coolaid.handsoffmyblock.util.VillagerMemoryHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -19,39 +21,18 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BedBlock;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.phys.AABB;
 
-import java.util.HashSet;
-import java.util.Set;
-
 public final class HandsOffMyBlockFabric implements ModInitializer {
-
-    private static final Set<Block> WORKSTATIONS = new HashSet<>();
-
-    static {
-        WORKSTATIONS.add(Blocks.BARREL);
-        WORKSTATIONS.add(Blocks.BLAST_FURNACE);
-        WORKSTATIONS.add(Blocks.BREWING_STAND);
-        WORKSTATIONS.add(Blocks.CARTOGRAPHY_TABLE);
-        WORKSTATIONS.add(Blocks.CAULDRON);
-        WORKSTATIONS.add(Blocks.COMPOSTER);
-        WORKSTATIONS.add(Blocks.FLETCHING_TABLE);
-        WORKSTATIONS.add(Blocks.GRINDSTONE);
-        WORKSTATIONS.add(Blocks.LECTERN);
-        WORKSTATIONS.add(Blocks.LOOM);
-        WORKSTATIONS.add(Blocks.SMITHING_TABLE);
-        WORKSTATIONS.add(Blocks.SMOKER);
-        WORKSTATIONS.add(Blocks.STONECUTTER);
-    }
 
     public static Item MARKER_ITEM = Items.STICK;
 
@@ -92,29 +73,34 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
                 return InteractionResult.PASS;
 
             // Only beds and workstation blocks are marked/unmarked
-            if (!isBed && !WORKSTATIONS.contains(block))
+            if (!isBed && !BlockSets.WORKSTATIONS.contains(block))
                 return InteractionResult.PASS;
 
             if (!(world instanceof ServerLevel serverLevel))
                 return InteractionResult.PASS;
 
             BlockPos otherHalf = isBed
-                    ? pos.relative(((BedBlock) block).getConnectedDirection(state))
-                    : null;
+                    ? pos.relative(BedBlock.getConnectedDirection(state)) : null;
 
             boolean alreadyBlocked =
-                    BlockAccessManager.isBlocked(pos) || (isBed && BlockAccessManager.isBlocked(otherHalf));
+                    BlockAccessManager.isBlocked(serverLevel, pos) ||
+                            (isBed && BlockAccessManager.isBlocked(serverLevel, otherHalf));
 
             if (alreadyBlocked) {
-                BlockAccessManager.unmarkBlock(pos);
-                if (isBed) BlockAccessManager.unmarkBlock(otherHalf);
+                BlockAccessManager.unmarkBlock(serverLevel, pos);
+                if (isBed) BlockAccessManager.unmarkBlock(serverLevel, otherHalf);
 
-                //  Release POI for head half bc that's what the villager tries to claim
+                PoiManager poiManager = serverLevel.getPoiManager();
+
                 if (isBed) {
                     BlockPos headPos = state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : otherHalf;
-                    serverLevel.getPoiManager().release(headPos);
+                    if (poiManager.getType(headPos).isPresent()) {
+                        poiManager.release(headPos);
+                    }
                 } else {
-                    serverLevel.getPoiManager().release(pos);
+                    if (poiManager.getType(pos).isPresent()) {
+                        poiManager.release(pos);
+                    }
                 }
 
                 VillagerMemoryHelper.invalidateNearbyVillagers(serverLevel, pos, isBed);
@@ -128,8 +114,8 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
                 spawnAngryVillagerParticles(serverLevel, pos, isBed ? otherHalf : null);
 
                 // Invalidate nearby villagers so they can reclaim unmarked workstation
-                BlockAccessManager.markBlock(pos);
-                if (isBed) BlockAccessManager.markBlock(otherHalf);
+                BlockAccessManager.markBlock(serverLevel, pos);
+                if (isBed) BlockAccessManager.markBlock(serverLevel, otherHalf);
 
                 VillagerMemoryHelper.invalidateNearbyVillagers(serverLevel, pos, isBed);
                 if (isBed) VillagerMemoryHelper.invalidateNearbyVillagers(serverLevel, otherHalf, isBed);
@@ -140,6 +126,50 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
                 );
             }
             return InteractionResult.SUCCESS;
+        });
+
+        PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, blockEntity) -> {
+            if (world.isClientSide()) return true;
+            if (!(world instanceof ServerLevel serverLevel)) return true;
+
+            Block block = state.getBlock();
+            boolean isBed = block instanceof BedBlock;
+
+            // Only care about blocks that can be marked
+            if (!isBed && !BlockSets.WORKSTATIONS.contains(block)) return true;
+
+            PoiManager poiManager = serverLevel.getPoiManager();
+
+            // Check if this block is marked, then remove POI
+            if (BlockAccessManager.isBlocked(serverLevel, pos)) {
+                if (poiManager.getType(pos).isPresent()) {
+                    poiManager.remove(pos);
+                }
+
+                // If it's a bed, also remove the other half
+                if (isBed) {
+                    BlockPos otherHalf = pos.relative(BedBlock.getConnectedDirection(state));
+                    if (poiManager.getType(otherHalf).isPresent()) {
+                        poiManager.remove(otherHalf);
+                    }
+                }
+
+                // Unmark POI
+                BlockAccessManager.unmarkBlock(serverLevel, pos);
+                if (isBed) {
+                    BlockPos otherHalf = pos.relative(BedBlock.getConnectedDirection(state));
+                    BlockAccessManager.unmarkBlock(serverLevel, otherHalf);
+                }
+
+                // Clean up villager memories
+                VillagerMemoryHelper.invalidateNearbyVillagers(serverLevel, pos, isBed);
+                if (isBed) {
+                    BlockPos otherHalf = pos.relative(BedBlock.getConnectedDirection(state));
+                    VillagerMemoryHelper.invalidateNearbyVillagers(serverLevel, otherHalf, isBed);
+                }
+            }
+
+            return true;
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -183,9 +213,7 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
         }
         if (villager.getBrain().hasMemoryValue(MemoryModuleType.HOME)) {
             GlobalPos home = villager.getBrain().getMemory(MemoryModuleType.HOME).orElse(null);
-            if (home != null && home.dimension().equals(level.dimension()) && home.pos().equals(pos)) {
-                return true;
-            }
+            return home != null && home.dimension().equals(level.dimension()) && home.pos().equals(pos);
         }
 
         return false;
