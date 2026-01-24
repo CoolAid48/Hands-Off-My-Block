@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -18,6 +19,7 @@ public class ConfigScreen extends Screen {
     private EditBox markerInput;
     private Component statusText;
     private int statusColor;
+    private StringWidget titleWidget;
 
     public ConfigScreen(Screen parent) {
         super(Component.literal("Hands Off My Block Config"));
@@ -55,10 +57,10 @@ public class ConfigScreen extends Screen {
 
         // Toggle Require Sneaking
         Button sneakToggle = Button.builder(
-                Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "Yes" : "No")),
+                Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")),
                 btn -> {
                     HandsOffMyConfigManager.get().requireSneaking = !HandsOffMyConfigManager.get().requireSneaking;
-                    btn.setMessage(Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "Yes" : "No")));
+                    btn.setMessage(Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")));
 
                     // Save to config
                     HandsOffMyConfigManager.save();
@@ -77,10 +79,10 @@ public class ConfigScreen extends Screen {
 
         // Toggle Bed Marking
         Button bedToggle = Button.builder(
-                Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "Yes" : "No")),
+                Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")),
                 btn -> {
                     HandsOffMyConfigManager.get().enableBedMarking = !HandsOffMyConfigManager.get().enableBedMarking;
-                    btn.setMessage(Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "Yes" : "No")));
+                    btn.setMessage(Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")));
 
                     // Save to config
                     HandsOffMyConfigManager.save();
@@ -97,9 +99,18 @@ public class ConfigScreen extends Screen {
         ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(bedToggle);
 
+        // Save and Exit button
+        this.addRenderableWidget(Button.builder(
+                Component.literal("Save and Exit"),
+                btn -> {
+                    saveConfig();
+                    minecraft.setScreen(parent);
+                }
+        ).bounds(centerX - 60, y + buttonHeight + 10, 120, 20).build());
+
         y += 50;
 
-        this.addRenderableWidget(new net.minecraft.client.gui.components.StringWidget(
+        this.addRenderableWidget(new StringWidget(
                 centerX - 100, y, 200, 20,
                 statusText,
                 this.font
@@ -111,15 +122,6 @@ public class ConfigScreen extends Screen {
                 }
             }
         });
-
-        // Save and Exit button
-        this.addRenderableWidget(Button.builder(
-                Component.literal("Save and Exit"),
-                btn -> {
-                    saveConfig();
-                    minecraft.setScreen(parent);
-                }
-        ).bounds(centerX - 100, this.height - 45, 200, 20).build());
     }
 
     private void saveConfig() {
@@ -130,7 +132,7 @@ public class ConfigScreen extends Screen {
 
         // Do not save and display error message when invalid
         if (id == null || item == null || item == Items.AIR) {
-            statusText = Component.literal("§cFailed to save config! Invalid item ID");
+            statusText = Component.literal("§cFailed to save config! §fInvalid item ID");
             statusColor = 0xFF5555;
 
             if (minecraft.player != null) {
@@ -152,25 +154,24 @@ public class ConfigScreen extends Screen {
 
         if (minecraft.player != null) {
             minecraft.player.displayClientMessage(
-                    Component.literal("§aConfig saved! Marker item set to: " + item.getName().getString()), true
+                    Component.literal("§aConfig saved! §fMarker item set to: §a" + item.getName().getString()), true
             );
         }
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        // Draws background and widgets
         graphics.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         super.render(graphics, mouseX, mouseY, delta);
 
-        // Screen title
-        graphics.drawCenteredString(this.font, "Hands Off My Block Config", this.width / 2, 20, 0xFFFFFF);
-
-        // Status text under marker input
-        if (!statusText.getString().isEmpty()) {
-            int centerX = this.width / 2;
-            int y = markerInput.getY() + markerInput.getHeight() + 5;
-            graphics.drawCenteredString(this.font, statusText, centerX, y, statusColor);
-        }
+        // Screen title widget
+        int textWidth = this.font.width(title) + 25; // Include +25 to fit bold formatting
+        Component title = Component.literal("Hands Off My Block Config").withStyle(ChatFormatting.BOLD);
+        titleWidget = new StringWidget(
+                (this.width - textWidth) / 2, 10, textWidth, 9, title, this.font
+        );
+        this.addRenderableWidget(titleWidget);
     }
 
     @Override
