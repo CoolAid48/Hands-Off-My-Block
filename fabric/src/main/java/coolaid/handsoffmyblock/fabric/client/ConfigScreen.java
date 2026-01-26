@@ -55,17 +55,33 @@ public class ConfigScreen extends Screen {
         Component enabled = Component.literal("Enabled").withStyle(ChatFormatting.GREEN);
         Component disabled = Component.literal("Disabled").withStyle(ChatFormatting.RED);
 
-        // Toggle Require Sneaking
+        // Top row: Workstation Marking (left) and Require Sneaking (right)
+        Button workstationToggle = Button.builder(
+                Component.literal("Workstation Marking: " +
+                        (HandsOffMyConfigManager.get().enableWorkstationMarking ? "§aYes" : "§cNo")),
+                btn -> {
+                    HandsOffMyConfigManager.get().enableWorkstationMarking =
+                            !HandsOffMyConfigManager.get().enableWorkstationMarking;
+                    btn.setMessage(Component.literal("Workstation Marking: " +
+                            (HandsOffMyConfigManager.get().enableWorkstationMarking ? "§aYes" : "§cNo")));
+                    HandsOffMyConfigManager.save();
+                    if (minecraft.player != null) {
+                        minecraft.player.displayClientMessage(
+                                Component.literal("Workstation Marking: ")
+                                        .append(HandsOffMyConfigManager.get().enableWorkstationMarking ? enabled : disabled),
+                                true
+                        );
+                    }
+                }
+        ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        this.addRenderableWidget(workstationToggle);
+
         Button sneakToggle = Button.builder(
                 Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")),
                 btn -> {
                     HandsOffMyConfigManager.get().requireSneaking = !HandsOffMyConfigManager.get().requireSneaking;
                     btn.setMessage(Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")));
-
-                    // Save to config
                     HandsOffMyConfigManager.save();
-
-                    // Action bar message
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
                                 Component.literal("Require Sneaking: ")
@@ -74,20 +90,17 @@ public class ConfigScreen extends Screen {
                         );
                     }
                 }
-        ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(sneakToggle);
 
-        // Toggle Bed Marking
+        // Second row: Bed Marking (left) and Pathfinding Tweaks (right)
+        y += buttonHeight + 10;
         Button bedToggle = Button.builder(
-                Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")),
+                Component.literal("Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")),
                 btn -> {
                     HandsOffMyConfigManager.get().enableBedMarking = !HandsOffMyConfigManager.get().enableBedMarking;
-                    btn.setMessage(Component.literal("Enable Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")));
-
-                    // Save to config
+                    btn.setMessage(Component.literal("Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")));
                     HandsOffMyConfigManager.save();
-
-                    // Action bar message
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
                                 Component.literal("Bed Marking: ")
@@ -96,10 +109,46 @@ public class ConfigScreen extends Screen {
                         );
                     }
                 }
-        ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        ).bounds(startX, y, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(bedToggle);
 
-        // Save and Exit button
+        Button tweakToggle = Button.builder(
+                Component.literal("Pathfinding Tweaks: " + (HandsOffMyConfigManager.get().pathfindingTweaks ? "§aYes" : "§cNo")),
+                btn -> {
+                    HandsOffMyConfigManager.get().pathfindingTweaks = !HandsOffMyConfigManager.get().pathfindingTweaks;
+                    btn.setMessage(Component.literal("Pathfinding Tweaks: " + (HandsOffMyConfigManager.get().pathfindingTweaks ? "§aYes" : "§cNo")));
+                    HandsOffMyConfigManager.save();
+                    if (minecraft.player != null) {
+                        minecraft.player.displayClientMessage(
+                                Component.literal("Pathfinding Tweaks: ")
+                                        .append(HandsOffMyConfigManager.get().pathfindingTweaks ? enabled : disabled),
+                                true
+                        );
+                    }
+                }
+        ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        this.addRenderableWidget(tweakToggle);
+
+        // Third row: Display Markings (left)
+        y += buttonHeight + 10;
+        Button actionBarToggle = Button.builder(
+                Component.literal("Display Markings: " + (HandsOffMyConfigManager.get().actionBarMessages ? "§aYes" : "§cNo")),
+                btn -> {
+                    HandsOffMyConfigManager.get().actionBarMessages = !HandsOffMyConfigManager.get().actionBarMessages;
+                    btn.setMessage(Component.literal("Display Markings: " + (HandsOffMyConfigManager.get().actionBarMessages ? "§aYes" : "§cNo")));
+                    HandsOffMyConfigManager.save();
+                    if (minecraft.player != null) {
+                        minecraft.player.displayClientMessage(
+                                Component.literal("Display Markings: ")
+                                        .append(HandsOffMyConfigManager.get().actionBarMessages ? enabled : disabled),
+                                true
+                        );
+                    }
+                }
+        ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        this.addRenderableWidget(actionBarToggle);
+
+        // Save and Exit button (centered)
         this.addRenderableWidget(Button.builder(
                 Component.literal("Save and Exit"),
                 btn -> {
@@ -108,8 +157,8 @@ public class ConfigScreen extends Screen {
                 }
         ).bounds(centerX - 60, y + buttonHeight + 10, 120, 20).build());
 
+        // Status text widget
         y += 50;
-
         this.addRenderableWidget(new StringWidget(
                 centerX - 100, y, 200, 20,
                 statusText,
@@ -123,6 +172,7 @@ public class ConfigScreen extends Screen {
             }
         });
     }
+
 
     private void saveConfig() {
         String input = markerInput.getValue().trim();
@@ -165,7 +215,7 @@ public class ConfigScreen extends Screen {
         graphics.fillGradient(0, 0, this.width, this.height, 0xC0101010, 0xD0101010);
         super.render(graphics, mouseX, mouseY, delta);
 
-        // Screen title widget
+        // Screen title component
         int textWidth = this.font.width(title) + 25; // Include +25 to fit bold formatting
         Component title = Component.literal("Hands Off My Block Config").withStyle(ChatFormatting.BOLD);
         titleWidget = new StringWidget(

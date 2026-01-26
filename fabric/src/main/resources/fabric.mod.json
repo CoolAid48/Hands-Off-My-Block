@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "handsoffmyblock",
-  "version": "0.1.0-beta3",
+  "version": "0.1.0-beta4",
   "name": "Hands Off My Block",
   "description": "Mark workstation blocks and beds to stop villagers from claiming them!",
   "authors": [
