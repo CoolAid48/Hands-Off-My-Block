@@ -4,9 +4,9 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "mixins": [
-    "PoiManagerMixin",
-    "ServerLevelMixin",
-    "VillagerMixin"
+    "HandsOffMyPoiManagerMixin",
+    "HandsOffMyServerLevelMixin",
+    "HandsOffMyVillagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,11 +1,14 @@
 {
   "schemaVersion": 1,
   "id": "handsoffmyblock",
-  "version": "0.1.0-beta4",
+  "version": "0.2.0",
   "name": "Hands Off My Block",
   "description": "Mark workstation blocks and beds to stop villagers from claiming them!",
   "authors": [
     "CoolAid48"
+  ],
+  "contributors": [
+    "Mod icon by PurpleSquirrel1503"
   ],
   "contact": {
     "homepage": "https://coolaid.live/",
@@ -21,6 +24,9 @@
     ],
     "client": [
       "coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient"
+    ],
+    "modmenu": [
+      "coolaid.handsoffmyblock.fabric.compat.ModMenu"
     ]
   },
   "mixins": [
@@ -28,7 +34,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.17.3",
-    "minecraft": "~1.21.11",
+    "minecraft": "~1.21",
     "fabric-api": "*"
   },
   "custom": {

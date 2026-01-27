@@ -1,6 +1,6 @@
 package coolaid.handsoffmyblock.util;
 
-import coolaid.handsoffmyblock.data.MarkedBlocksData;
+import coolaid.handsoffmyblock.data.HandsOffMyMarkedBlocksData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.*;
 
-public final class BlockAccessManager {
+public final class HandsOffMyBlockAccessManager {
 
     public enum DestroyReason {
         PLAYER, EXPLOSION, FIRE, PISTON, REPLACED, UNKNOWN
@@ -55,21 +55,21 @@ public final class BlockAccessManager {
 
     // MARKING METHODS
     public static void markBlock(ServerLevel level, BlockPos pos) {
-        MarkedBlocksData.get(level).mark(pos);
+        HandsOffMyMarkedBlocksData.get(level).mark(pos);
         track(level, pos);
     }
 
     public static void unmarkBlock(ServerLevel level, BlockPos pos) {
-        MarkedBlocksData.get(level).unmark(pos);
+        HandsOffMyMarkedBlocksData.get(level).unmark(pos);
         clear(level, pos);
     }
 
     public static boolean isBlocked(ServerLevel level, BlockPos pos) {
-        return MarkedBlocksData.get(level).isMarked(pos);
+        return HandsOffMyMarkedBlocksData.get(level).isMarked(pos);
     }
 
     public static Set<BlockPos> getMarked(ServerLevel level) {
-        return MarkedBlocksData.get(level).getAllMarked();
+        return HandsOffMyMarkedBlocksData.get(level).getAllMarked();
     }
 
     // TRACKING METHODS

@@ -14,15 +14,15 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 
-public class ConfigScreen extends Screen {
+public class ConfigScreenFabric extends Screen {
     private final Screen parent;
     private EditBox markerInput;
     private Component statusText;
     private int statusColor;
     private StringWidget titleWidget;
 
-    public ConfigScreen(Screen parent) {
-        super(Component.literal("Hands Off My Block Config"));
+    public ConfigScreenFabric(Screen parent) {
+        super(Component.translatable("text.configScreen.title"));
         this.parent = parent;
         this.statusText = Component.empty();
     }
@@ -30,44 +30,44 @@ public class ConfigScreen extends Screen {
     @Override
     protected void init() {
         int centerX = this.width / 2;
-        int y = this.height / 2 - 70;
+        int y = this.height / 2 - 100;
 
         // Marker item label and EditBox for item ID input
         this.addRenderableWidget(new net.minecraft.client.gui.components.StringWidget(
                 centerX - 100, y, 200, 20,
-                Component.literal("Input valid item ID"),
+                Component.translatable("text.configScreen.label"),
                 this.font
         ));
-        markerInput = new EditBox(this.font, centerX - 100, y + 20, 200, 20,
+        markerInput = new EditBox(this.font, centerX - 100, y + 15, 200, 20,
                 Component.literal(""));
         if (HandsOffMyConfigManager.get().markerItem != null) {
             markerInput.setValue(HandsOffMyConfigManager.get().markerItem.toString());
         }
         this.addRenderableWidget(markerInput);
 
-        y += 60;
+        y += 45;
 
         int buttonWidth = 130;
         int buttonHeight = 20;
         int buttonSpacing = 10;
         int startX = centerX - buttonWidth - (buttonSpacing / 2);
 
-        Component enabled = Component.literal("Enabled").withStyle(ChatFormatting.GREEN);
-        Component disabled = Component.literal("Disabled").withStyle(ChatFormatting.RED);
+        Component enabled = Component.translatable("component.actionbar.enabled").withStyle(ChatFormatting.GREEN);
+        Component disabled = Component.translatable("component.actionbar.disabled").withStyle(ChatFormatting.RED);
 
-        // Top row: Workstation Marking (left) and Require Sneaking (right)
+        // Top row: Block Marking (left) and Require Sneaking (right)
         Button workstationToggle = Button.builder(
-                Component.literal("Workstation Marking: " +
-                        (HandsOffMyConfigManager.get().enableWorkstationMarking ? "§aYes" : "§cNo")),
+                Component.translatable("text.configButton.workstationToggle",
+                        Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().enableWorkstationMarking =
                             !HandsOffMyConfigManager.get().enableWorkstationMarking;
-                    btn.setMessage(Component.literal("Workstation Marking: " +
-                            (HandsOffMyConfigManager.get().enableWorkstationMarking ? "§aYes" : "§cNo")));
+                    btn.setMessage(Component.translatable("text.configButton.workstationToggle",
+                            Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")));
                     HandsOffMyConfigManager.save();
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
-                                Component.literal("Workstation Marking: ")
+                                Component.translatable("message.actionbar.workstationToggle")
                                         .append(HandsOffMyConfigManager.get().enableWorkstationMarking ? enabled : disabled),
                                 true
                         );
@@ -77,14 +77,14 @@ public class ConfigScreen extends Screen {
         this.addRenderableWidget(workstationToggle);
 
         Button sneakToggle = Button.builder(
-                Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")),
+                Component.translatable("text.configButton.sneakToggle", Component.translatable(HandsOffMyConfigManager.get().requireSneaking ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().requireSneaking = !HandsOffMyConfigManager.get().requireSneaking;
-                    btn.setMessage(Component.literal("Require Sneaking: " + (HandsOffMyConfigManager.get().requireSneaking ? "§aYes" : "§cNo")));
+                    btn.setMessage(Component.translatable("text.configButton.sneakToggle", Component.translatable(HandsOffMyConfigManager.get().requireSneaking ? "component.configButton.yes" : "component.configButton.no")));
                     HandsOffMyConfigManager.save();
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
-                                Component.literal("Require Sneaking: ")
+                                Component.translatable("message.actionbar.sneakToggle")
                                         .append(HandsOffMyConfigManager.get().requireSneaking ? enabled : disabled),
                                 true
                         );
@@ -94,16 +94,16 @@ public class ConfigScreen extends Screen {
         this.addRenderableWidget(sneakToggle);
 
         // Second row: Bed Marking (left) and Pathfinding Tweaks (right)
-        y += buttonHeight + 10;
+        y += buttonHeight + 5;
         Button bedToggle = Button.builder(
-                Component.literal("Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")),
+                Component.translatable("text.configButton.bedToggle", Component.translatable(HandsOffMyConfigManager.get().enableBedMarking ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().enableBedMarking = !HandsOffMyConfigManager.get().enableBedMarking;
-                    btn.setMessage(Component.literal("Bed Marking: " + (HandsOffMyConfigManager.get().enableBedMarking ? "§aYes" : "§cNo")));
+                    btn.setMessage(Component.translatable("text.configButton.bedToggle", Component.translatable(HandsOffMyConfigManager.get().enableBedMarking ? "component.configButton.yes" : "component.configButton.no")));
                     HandsOffMyConfigManager.save();
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
-                                Component.literal("Bed Marking: ")
+                                Component.translatable("message.actionbar.bedToggle")
                                         .append(HandsOffMyConfigManager.get().enableBedMarking ? enabled : disabled),
                                 true
                         );
@@ -113,14 +113,14 @@ public class ConfigScreen extends Screen {
         this.addRenderableWidget(bedToggle);
 
         Button tweakToggle = Button.builder(
-                Component.literal("Pathfinding Tweaks: " + (HandsOffMyConfigManager.get().pathfindingTweaks ? "§aYes" : "§cNo")),
+                Component.translatable("text.configButton.tweakToggle", Component.translatable(HandsOffMyConfigManager.get().pathfindingTweaks ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().pathfindingTweaks = !HandsOffMyConfigManager.get().pathfindingTweaks;
-                    btn.setMessage(Component.literal("Pathfinding Tweaks: " + (HandsOffMyConfigManager.get().pathfindingTweaks ? "§aYes" : "§cNo")));
+                    btn.setMessage(Component.translatable("text.configButton.tweakToggle", Component.translatable(HandsOffMyConfigManager.get().pathfindingTweaks ? "component.configButton.yes" : "component.configButton.no")));
                     HandsOffMyConfigManager.save();
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
-                                Component.literal("Pathfinding Tweaks: ")
+                                Component.translatable("message.actionbar.tweakToggle")
                                         .append(HandsOffMyConfigManager.get().pathfindingTweaks ? enabled : disabled),
                                 true
                         );
@@ -129,17 +129,17 @@ public class ConfigScreen extends Screen {
         ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
         this.addRenderableWidget(tweakToggle);
 
-        // Third row: Display Markings (left)
-        y += buttonHeight + 10;
+        // Third row: Show Markings (left)
+        y += buttonHeight + 5;
         Button actionBarToggle = Button.builder(
-                Component.literal("Display Markings: " + (HandsOffMyConfigManager.get().actionBarMessages ? "§aYes" : "§cNo")),
+                Component.translatable("text.configButton.showMarkings", Component.translatable(HandsOffMyConfigManager.get().actionBarMessages ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().actionBarMessages = !HandsOffMyConfigManager.get().actionBarMessages;
-                    btn.setMessage(Component.literal("Display Markings: " + (HandsOffMyConfigManager.get().actionBarMessages ? "§aYes" : "§cNo")));
+                    btn.setMessage(Component.translatable("text.configButton.showMarkings", Component.translatable(HandsOffMyConfigManager.get().actionBarMessages ? "component.configButton.yes" : "component.configButton.no")));
                     HandsOffMyConfigManager.save();
                     if (minecraft.player != null) {
                         minecraft.player.displayClientMessage(
-                                Component.literal("Display Markings: ")
+                                Component.translatable("message.actionbar.showMarkings")
                                         .append(HandsOffMyConfigManager.get().actionBarMessages ? enabled : disabled),
                                 true
                         );
@@ -150,19 +150,16 @@ public class ConfigScreen extends Screen {
 
         // Save and Exit button (centered)
         this.addRenderableWidget(Button.builder(
-                Component.literal("Save and Exit"),
+                Component.translatable("text.configButton.save_and_exit"),
                 btn -> {
                     saveConfig();
                     minecraft.setScreen(parent);
                 }
-        ).bounds(centerX - 60, y + buttonHeight + 10, 120, 20).build());
+        ).bounds(centerX - 60, y + buttonHeight + 4, 120, 20).build());
 
         // Status text widget
-        y += 50;
         this.addRenderableWidget(new StringWidget(
-                centerX - 100, y, 200, 20,
-                statusText,
-                this.font
+                centerX - 100, y, 200, 20, statusText, this.font
         ) {
             @Override
             public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -173,7 +170,6 @@ public class ConfigScreen extends Screen {
         });
     }
 
-
     private void saveConfig() {
         String input = markerInput.getValue().trim();
 
@@ -182,7 +178,7 @@ public class ConfigScreen extends Screen {
 
         // Do not save and display error message when invalid
         if (id == null || item == null || item == Items.AIR) {
-            statusText = Component.literal("§cFailed to save config! §fInvalid item ID");
+            statusText = Component.translatable("message.actionbar.configFailed");
             statusColor = 0xFF5555;
 
             if (minecraft.player != null) {
@@ -204,7 +200,8 @@ public class ConfigScreen extends Screen {
 
         if (minecraft.player != null) {
             minecraft.player.displayClientMessage(
-                    Component.literal("§aConfig saved! §fMarker item set to: §a" + item.getName().getString()), true
+                    Component.translatable("message.actionbar.configSaved", item.getName()
+                    ).withStyle(ChatFormatting.GREEN), true
             );
         }
     }
@@ -217,7 +214,7 @@ public class ConfigScreen extends Screen {
 
         // Screen title component
         int textWidth = this.font.width(title) + 25; // Include +25 to fit bold formatting
-        Component title = Component.literal("Hands Off My Block Config").withStyle(ChatFormatting.BOLD);
+        Component title = Component.translatable("text.configScreen.title").withStyle(ChatFormatting.BOLD);
         titleWidget = new StringWidget(
                 (this.width - textWidth) / 2, 10, textWidth, 9, title, this.font
         );

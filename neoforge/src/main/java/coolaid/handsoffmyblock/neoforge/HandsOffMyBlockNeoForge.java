@@ -1,12 +1,210 @@
 package coolaid.handsoffmyblock.neoforge;
 
-import coolaid.handsoffmyblock.HandsOffMyBlock;
+import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
+import coolaid.handsoffmyblock.neoforge.client.ConfigScreenNeoForge;
+import coolaid.handsoffmyblock.neoforge.client.HandsOffMyBlockNeoForgeClient;
+import coolaid.handsoffmyblock.util.HandsOffMyBlockAccessManager;
+import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
+import coolaid.handsoffmyblock.util.HandsOffMyVillagerMemoryHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
-@Mod(HandsOffMyBlock.MOD_ID)
+@Mod(HandsOffMyBlockNeoForge.MOD_ID)
 public final class HandsOffMyBlockNeoForge {
-    public HandsOffMyBlockNeoForge() {
-        // Run our common setup.
-        HandsOffMyBlock.init();
+    public static final String MOD_ID = "handsoffmyblock";
+    public static Item MARKER_ITEM = Items.STICK;
+
+    public HandsOffMyBlockNeoForge(IEventBus modEventBus) {
+        // Register server-side and client-side setups
+        NeoForge.EVENT_BUS.addListener(this::onRightClickBlock);
+        NeoForge.EVENT_BUS.addListener(this::onBlockBreak);
+        modEventBus.addListener(this::onClientSetup);
+
+        reloadMarkerItemFromConfig();
+        ExternalBlockListenerNeoForge.register();
+
+        // Register the config screen with NeoForge's built-in mod menu
+        ModList.get().getModContainerById("handsoffmyblock").ifPresent(mod -> {
+            mod.registerExtensionPoint(IConfigScreenFactory.class,
+                    (IConfigScreenFactory)(minecraft, parent) -> new ConfigScreenNeoForge(parent));
+        });
+    }
+
+    private void onClientSetup(FMLClientSetupEvent event) {
+        NeoForge.EVENT_BUS.addListener(this::onClientTick);
+    }
+
+    private void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getLevel().isClientSide()) return;
+
+        var config = HandsOffMyConfigManager.get();
+
+        // Config marker item
+        ItemStack held = event.getItemStack();
+        Item markerItem = BuiltInRegistries.ITEM.getOptional(config.markerItem).orElse(Items.STICK);
+        if (!held.is(markerItem)) return;
+
+        BlockPos pos = event.getPos();
+        BlockState state = event.getLevel().getBlockState(pos);
+        Block block = state.getBlock();
+        boolean isBed = block instanceof BedBlock;
+
+        // CONFIG TOGGLES
+        if (!isBed && (!HandsOffMyBlockSets.WORKSTATIONS.contains(block) || !config.enableWorkstationMarking)) return;
+        if (config.requireSneaking && !event.getEntity().isCrouching()) return;
+        if (isBed && !config.enableBedMarking) return;
+
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
+
+        BlockPos otherHalf = isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null;
+        boolean alreadyBlocked = HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)
+                || (isBed && HandsOffMyBlockAccessManager.isBlocked(serverLevel, otherHalf));
+
+        if (alreadyBlocked) {
+            unmarkBlockAndInvalidate(serverLevel, pos, isBed, otherHalf, state);
+            sendActionBarToPlayer(event.getEntity(),
+                    Component.translatable("message.actionbar.unmarked").append(block.getName()).withStyle(ChatFormatting.GREEN)
+            );
+        } else {
+            spawnAngryVillagerParticles(serverLevel, pos, otherHalf);
+            markBlockAndInvalidate(serverLevel, pos, isBed, otherHalf);
+            sendActionBarToPlayer(event.getEntity(),
+                    Component.translatable("message.actionbar.marked").append(block.getName()).withStyle(ChatFormatting.RED)
+            );
+        }
+
+        event.setCanceled(true);
+        event.setCancellationResult(InteractionResult.SUCCESS);
+    }
+
+    private void onBlockBreak(BlockEvent.BreakEvent event) {
+        if (event.getLevel().isClientSide()) return;
+        if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
+
+        BlockPos pos = event.getPos();
+        BlockState state = event.getState();
+        Block block = state.getBlock();
+        boolean isBed = block instanceof BedBlock;
+
+        // Only care about blocks that can be marked
+        if (!isBed && !HandsOffMyBlockSets.WORKSTATIONS.contains(block)) return;
+
+        // Check if this block is marked, then remove POI
+        if (HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)) {
+            unmarkBroken(serverLevel, pos, state);
+            unmarkBlockAndInvalidate(serverLevel, pos, isBed,
+                    isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null, state);
+        }
+    }
+
+    private void onClientTick(ClientTickEvent.Post event) {
+        if (HandsOffMyBlockNeoForgeClient.openConfig != null && HandsOffMyBlockNeoForgeClient.openConfig.consumeClick()) {
+            Minecraft.getInstance().setScreen(new ConfigScreenNeoForge(Minecraft.getInstance().screen));
+        }
+    }
+
+    private static void unmarkBroken(ServerLevel level, BlockPos pos, BlockState state) {
+        var players = level.getPlayers(p -> p.blockPosition().closerThan(pos, 64));
+
+        Component msg = Component.translatable("message.actionbar.unmarked")
+                .append(state.getBlock().getName())
+                .withStyle(ChatFormatting.GREEN)
+                .append(Component.translatable("component.actionbar.destroyed"));
+
+        for (var player : players) {
+            sendActionBarToPlayer(player, msg);
+        }
+    }
+
+    public static void sendActionBarToPlayer(net.minecraft.world.entity.player.Player player, Component message) {
+        if (HandsOffMyConfigManager.get().actionBarMessages) {
+            player.displayClientMessage(message, true);
+        }
+    }
+
+    public static void reloadMarkerItemFromConfig() {
+        MARKER_ITEM = BuiltInRegistries.ITEM.getOptional(HandsOffMyConfigManager.get().markerItem).orElse(Items.STICK);
+    }
+
+    private static void spawnAngryVillagerParticles(ServerLevel level, BlockPos pos, BlockPos otherHalf) {
+        AABB searchArea = new AABB(pos).inflate(48.0);
+        if (otherHalf != null) searchArea = searchArea.minmax(new AABB(otherHalf).inflate(48.0));
+
+        for (Villager villager : level.getEntitiesOfClass(Villager.class, searchArea)) {
+            if (villagerHasMemoryForBlock(villager, pos, level) || (otherHalf != null && villagerHasMemoryForBlock(villager, otherHalf, level))) {
+                spawnAngryParticlesAboveHead(level, villager);
+            }
+        }
+    }
+
+    private static boolean villagerHasMemoryForBlock(Villager villager, BlockPos pos, ServerLevel level) {
+        return memoryMatches(villager, level, pos, MemoryModuleType.JOB_SITE)
+                || memoryMatches(villager, level, pos, MemoryModuleType.POTENTIAL_JOB_SITE)
+                || memoryMatches(villager, level, pos, MemoryModuleType.HOME);
+    }
+
+    private static boolean memoryMatches(Villager villager, ServerLevel level, BlockPos pos, MemoryModuleType<GlobalPos> type) {
+        return villager.getBrain().getMemory(type).map(mem -> mem.dimension().equals(level.dimension()) && mem.pos().equals(pos)).orElse(false);
+    }
+
+    private static void spawnAngryParticlesAboveHead(ServerLevel level, Villager villager) {
+        double x = villager.getX();
+        double y = villager.getY() + villager.getEyeHeight();
+        double z = villager.getZ();
+
+        level.sendParticles(ParticleTypes.ANGRY_VILLAGER, x, y, z, 6, 0.3, 0.1, 0.3, 0.0);
+    }
+
+    private static void markBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf) {
+        HandsOffMyBlockAccessManager.markBlock(level, pos);
+        HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
+        if (isBed && otherHalf != null) {
+            HandsOffMyBlockAccessManager.markBlock(level, otherHalf);
+            HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
+        }
+    }
+
+    private static void unmarkBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf, BlockState state) {
+        HandsOffMyBlockAccessManager.unmarkBlock(level, pos);
+        HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
+
+        if (isBed && otherHalf != null) {
+            HandsOffMyBlockAccessManager.unmarkBlock(level, otherHalf);
+            HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
+
+            // Bed POI release
+            var poiManager = level.getPoiManager();
+            BlockPos headPos = state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : otherHalf;
+            if (poiManager.getType(headPos).isPresent()) poiManager.release(headPos);
+        } else if (!isBed) {
+            var poiManager = level.getPoiManager();
+            if (poiManager.getType(pos).isPresent()) poiManager.release(pos);
+        }
     }
 }

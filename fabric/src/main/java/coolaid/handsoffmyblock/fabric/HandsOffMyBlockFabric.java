@@ -1,11 +1,11 @@
 package coolaid.handsoffmyblock.fabric;
 
 import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
-import coolaid.handsoffmyblock.fabric.client.ConfigScreen;
+import coolaid.handsoffmyblock.fabric.client.ConfigScreenFabric;
 import coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient;
-import coolaid.handsoffmyblock.util.BlockAccessManager;
-import coolaid.handsoffmyblock.util.BlockSets;
-import coolaid.handsoffmyblock.util.VillagerMemoryHelper;
+import coolaid.handsoffmyblock.util.HandsOffMyBlockAccessManager;
+import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
+import coolaid.handsoffmyblock.util.HandsOffMyVillagerMemoryHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -56,26 +56,26 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
 
             // CONFIG TOGGLES
             // (pathfindingTweaks is handled in VillagerMixin and actionBarMessages is handled in sendActionBarToPlayer() )
-            if (!isBed && (!BlockSets.WORKSTATIONS.contains(block) || !config.enableWorkstationMarking)) return InteractionResult.PASS; // workstation toggle
+            if (!isBed && (!HandsOffMyBlockSets.WORKSTATIONS.contains(block) || !config.enableWorkstationMarking)) return InteractionResult.PASS; // workstation toggle
             if (config.requireSneaking && !player.isCrouching()) return InteractionResult.PASS; // sneaking toggle
             if (isBed && !config.enableBedMarking) return InteractionResult.PASS; // bed toggle
 
             if (!(world instanceof ServerLevel serverLevel)) return InteractionResult.PASS;
 
             BlockPos otherHalf = isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null;
-            boolean alreadyBlocked = BlockAccessManager.isBlocked(serverLevel, pos)
-                    || (isBed && BlockAccessManager.isBlocked(serverLevel, otherHalf));
+            boolean alreadyBlocked = HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)
+                    || (isBed && HandsOffMyBlockAccessManager.isBlocked(serverLevel, otherHalf));
 
             if (alreadyBlocked) {
                 unmarkBlockAndInvalidate(serverLevel, pos, isBed, otherHalf, state);
                 sendActionBarToPlayer(player,
-                        Component.literal("Unmarked ").append(block.getName()).withStyle(ChatFormatting.GREEN)
+                        Component.translatable("message.actionbar.unmarked").append(block.getName()).withStyle(ChatFormatting.GREEN)
                 );
             } else {
                 spawnAngryVillagerParticles(serverLevel, pos, otherHalf);
                 markBlockAndInvalidate(serverLevel, pos, isBed, otherHalf);
                 sendActionBarToPlayer(player,
-                        Component.literal("Marked ").append(block.getName()).withStyle(ChatFormatting.RED)
+                        Component.translatable("message.actionbar.marked").append(block.getName()).withStyle(ChatFormatting.RED)
                 );
             }
 
@@ -90,10 +90,10 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
             boolean isBed = block instanceof BedBlock;
 
             // Only care about blocks that can be marked
-            if (!isBed && !BlockSets.WORKSTATIONS.contains(block)) return true;
+            if (!isBed && !HandsOffMyBlockSets.WORKSTATIONS.contains(block)) return true;
 
             // Check if this block is marked, then remove POI
-            if (BlockAccessManager.isBlocked(serverLevel, pos)) {
+            if (HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)) {
                 unmarkBroken(serverLevel, pos, state);
                 unmarkBlockAndInvalidate(serverLevel, pos, isBed,
                         isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null, state);
@@ -102,11 +102,11 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
             return true;
         });
 
-        ExternalBlockListener.register();
+        ExternalBlockListenerFabric.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (HandsOffMyBlockFabricClient.openConfig != null && HandsOffMyBlockFabricClient.openConfig.consumeClick()) {
-                Minecraft.getInstance().setScreen(new ConfigScreen(Minecraft.getInstance().screen));
+                Minecraft.getInstance().setScreen(new ConfigScreenFabric(Minecraft.getInstance().screen));
             }
         });
     }
@@ -114,10 +114,11 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
     private static void unmarkBroken(ServerLevel level, BlockPos pos, BlockState state) {
         var players = level.getPlayers(p -> p.blockPosition().closerThan(pos, 64));
 
-        Component msg = Component.literal("Unmarked ")
+        Component msg = Component.translatable("message.actionbar.unmarked")
                 .append(state.getBlock().getName())
                 .withStyle(ChatFormatting.GREEN)
-                .append(" §e(Destroyed)");
+                .append(Component.translatable("component.actionbar.destroyed"));
+
 
         for (var player : players) {
             sendActionBarToPlayer(player, msg);
@@ -165,21 +166,21 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
     }
 
     private static void markBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf) {
-        BlockAccessManager.markBlock(level, pos);
-        VillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
+        HandsOffMyBlockAccessManager.markBlock(level, pos);
+        HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
         if (isBed && otherHalf != null) {
-            BlockAccessManager.markBlock(level, otherHalf);
-            VillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
+            HandsOffMyBlockAccessManager.markBlock(level, otherHalf);
+            HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
         }
     }
 
     private static void unmarkBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf, BlockState state) {
-        BlockAccessManager.unmarkBlock(level, pos);
-        VillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
+        HandsOffMyBlockAccessManager.unmarkBlock(level, pos);
+        HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
 
         if (isBed && otherHalf != null) {
-            BlockAccessManager.unmarkBlock(level, otherHalf);
-            VillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
+            HandsOffMyBlockAccessManager.unmarkBlock(level, otherHalf);
+            HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
 
             // Bed POI release
             var poiManager = level.getPoiManager();

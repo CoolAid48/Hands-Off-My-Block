@@ -2,7 +2,6 @@ package coolaid.handsoffmyblock.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,14 +9,14 @@ import java.nio.file.Path;
 
 public final class HandsOffMyConfigManager {
 
-    private static final Gson GSON = new GsonBuilder()
-            .setPrettyPrinting()
-            .create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static final Path CONFIG_PATH =
-            FabricLoader.getInstance().getConfigDir().resolve("handsoffmyblock.json");
-
+    private static Path CONFIG_PATH = Path.of("config", "handsoffmyblock.json");
     private static HandsOffMyConfig CONFIG;
+
+    public static void setConfigPath(Path path) {
+        CONFIG_PATH = path;
+    }
 
     public static void load() {
         if (Files.exists(CONFIG_PATH)) {
@@ -27,7 +26,7 @@ public final class HandsOffMyConfigManager {
                         HandsOffMyConfig.class
                 );
             } catch (Exception e) {
-                System.err.println("Failed to load config, defaults");
+                System.err.println("Failed to load config, loading defaults instead");
                 e.printStackTrace();
                 CONFIG = new HandsOffMyConfig();
                 save();
@@ -43,14 +42,14 @@ public final class HandsOffMyConfigManager {
             Files.createDirectories(CONFIG_PATH.getParent());
             Files.writeString(CONFIG_PATH, GSON.toJson(CONFIG));
         } catch (IOException e) {
-            System.err.println("Failed to save config");
+            System.err.println("Failed to save config, big oops");
             e.printStackTrace();
         }
     }
 
     public static HandsOffMyConfig get() {
         if (CONFIG == null) {
-            load(); // safety net
+            load(); // safety net to make sure the config gets loaded
         }
         return CONFIG;
     }

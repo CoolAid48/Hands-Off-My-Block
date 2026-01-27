@@ -1,32 +1,19 @@
 modLoader = "javafml"
 loaderVersion = "[2,)"
-#issueTrackerURL = ""
+issueTrackerURL = "https://github.com/CoolAid48/Hands-Off-My-Block/issues"
 license = "MIT"
 
 [[mods]]
 modId = "handsoffmyblock"
-version = "${version}"
+version = "0.2.0"
 displayName = "Hands Off My Block"
 authors = "CoolAid48"
+credits = "Mod icon by PurpleSquirrel1503"
 description = '''
-
+Mark workstation blocks and beds to stop villagers from claiming them!
 '''
-#logoFile = ""
 
-[[dependencies.handsoffmyblock]]
-modId = "neoforge"
-type = "required"
-versionRange = "[21,)"
-ordering = "NONE"
-side = "BOTH"
-
-[[dependencies.handsoffmyblock]]
-modId = "minecraft"
-type = "required"
-versionRange = "[1.21.11,)"
-ordering = "NONE"
-side = "BOTH"
-
+logoFile = "assets/handsoffmyblock/icon.png"
 
 [[mixins]]
 config = "handsoffmyblock.mixins.json"

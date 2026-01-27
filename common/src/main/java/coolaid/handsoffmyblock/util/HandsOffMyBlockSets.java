@@ -5,7 +5,7 @@ import net.minecraft.world.level.block.Blocks;
 import java.util.HashSet;
 import java.util.Set;
 
-public class BlockSets {
+public class HandsOffMyBlockSets {
     public static final Set<Block> WORKSTATIONS = new HashSet<>();
 
     static {

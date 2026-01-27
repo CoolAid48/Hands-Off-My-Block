@@ -7,7 +7,7 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.phys.AABB;
 
-public class VillagerMemoryHelper {
+public class HandsOffMyVillagerMemoryHelper {
 
     private static final double RANGE = 64.0D;
 

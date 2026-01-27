@@ -6,7 +6,7 @@ import net.minecraft.world.level.Level;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ServerLevelTracker {
+public class HandsOffMyServerLevelTracker {
     private static final Map<String, ServerLevel> dimensionMap = new HashMap<>();
 
     public static void registerLevel(ServerLevel level) {

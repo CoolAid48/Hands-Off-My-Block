@@ -2,7 +2,7 @@ package coolaid.handsoffmyblock.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import coolaid.handsoffmyblock.util.BlockSets;
+import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.village.poi.PoiManager;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-/* NOTES ON DATA REGISTRY BELOW
+/* NOTES ON DATA REGISTRATION BELOW
  * - This is my first attempt at persistent world data that gets automatically saved and loaded, using codecs
  * for serialization (SavedDataType Registration).
  * - Each individual world and dimension has separate data; there are 3 separate handsoffmyblock_marked.dat
@@ -25,11 +25,11 @@ import java.util.Set;
  * unmarking them and clearing them from the .dat file).
  */
 
-public class MarkedBlocksData extends SavedData {
+public class HandsOffMyMarkedBlocksData extends SavedData {
     private final Set<BlockPos> marked = new HashSet<>();
 
     // Define a Codec for serialization/deserialization
-    private static final Codec<MarkedBlocksData> CODEC = RecordCodecBuilder.create(instance ->
+    private static final Codec<HandsOffMyMarkedBlocksData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(Codec.LONG.listOf().fieldOf("positions").xmap(
                     longs -> {
                         Set<BlockPos> set = new HashSet<>();
@@ -46,20 +46,20 @@ public class MarkedBlocksData extends SavedData {
                         return new ArrayList<>(longs);
                     }
             ).forGetter(data -> data.marked)).apply(instance, set -> {
-                MarkedBlocksData data = new MarkedBlocksData();
+                HandsOffMyMarkedBlocksData data = new HandsOffMyMarkedBlocksData();
                 data.marked.addAll(set);
                 return data;
             })
     );
 
-    public static final SavedDataType<MarkedBlocksData> TYPE = new SavedDataType<>(
-            "handsoffmyblock_marked", MarkedBlocksData::new, CODEC, null
+    public static final SavedDataType<HandsOffMyMarkedBlocksData> TYPE = new SavedDataType<>(
+            "handsoffmyblock_marked", HandsOffMyMarkedBlocksData::new, CODEC, null
     );
 
-    public MarkedBlocksData() {
+    public HandsOffMyMarkedBlocksData() {
     }
 
-    public static MarkedBlocksData get(ServerLevel level) {
+    public static HandsOffMyMarkedBlocksData get(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(TYPE);
     }
 
@@ -94,7 +94,7 @@ public class MarkedBlocksData extends SavedData {
             BlockState state = level.getBlockState(pos);
             Block block = state.getBlock();
 
-            if (state.isAir() || (!(block instanceof BedBlock) && !BlockSets.WORKSTATIONS.contains(block))) {
+            if (state.isAir() || (!(block instanceof BedBlock) && !HandsOffMyBlockSets.WORKSTATIONS.contains(block))) {
 
                 // Remove from Minecraft's POI system if it exists
                 if (poiManager.getType(pos).isPresent()) {
