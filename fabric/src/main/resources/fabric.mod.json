@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "handsoffmyblock",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "Hands Off My Block",
-  "description": "Mark workstation blocks and beds to stop villagers from claiming them!",
+  "description": "Mark workstation blocks and beds to stop villagers from claiming them",
   "authors": [
     "CoolAid48"
   ],
@@ -34,7 +34,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.17.3",
-    "minecraft": "~1.21",
+    "minecraft": "~1.21.11",
     "fabric-api": "*"
   },
   "custom": {
