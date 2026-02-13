@@ -1,10 +1,12 @@
 package coolaid.handsoffmyblock.neoforge;
 
+import coolaid.handsoffmyblock.HandsOffMyBlock;
 import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
 import coolaid.handsoffmyblock.neoforge.client.ConfigScreenNeoForge;
 import coolaid.handsoffmyblock.neoforge.client.HandsOffMyBlockNeoForgeClient;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockAccessManager;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
+import coolaid.handsoffmyblock.util.HandsOffMyPoiRefreshHelper;
 import coolaid.handsoffmyblock.util.HandsOffMyVillagerMemoryHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -46,6 +48,7 @@ public final class HandsOffMyBlockNeoForge {
         NeoForge.EVENT_BUS.addListener(this::onBlockBreak);
         modEventBus.addListener(this::onClientSetup);
 
+        HandsOffMyBlock.init();
         reloadMarkerItemFromConfig();
         ExternalBlockListenerNeoForge.register();
 
@@ -93,7 +96,7 @@ public final class HandsOffMyBlockNeoForge {
             );
         } else {
             spawnAngryVillagerParticles(serverLevel, pos, otherHalf);
-            markBlockAndInvalidate(serverLevel, pos, isBed, otherHalf);
+            markBlockAndInvalidate(serverLevel, pos, isBed, otherHalf, state);
             sendActionBarToPlayer(event.getEntity(),
                     Component.translatable("message.actionbar.marked").append(block.getName()).withStyle(ChatFormatting.RED)
             );
@@ -117,28 +120,14 @@ public final class HandsOffMyBlockNeoForge {
 
         // Check if this block is marked, then remove POI
         if (HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)) {
-            unmarkBroken(serverLevel, pos, state);
-            unmarkBlockAndInvalidate(serverLevel, pos, isBed,
-                    isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null, state);
+            HandsOffMyBlockAccessManager.notifyBrokenUnmark(serverLevel, pos, state, HandsOffMyBlockNeoForge::sendActionBarToPlayer);
+            unmarkBlockAndInvalidate(serverLevel, pos, isBed, isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null, state);
         }
     }
 
     private void onClientTick(ClientTickEvent.Post event) {
         if (HandsOffMyBlockNeoForgeClient.openConfig != null && HandsOffMyBlockNeoForgeClient.openConfig.consumeClick()) {
             Minecraft.getInstance().setScreen(new ConfigScreenNeoForge(Minecraft.getInstance().screen));
-        }
-    }
-
-    private static void unmarkBroken(ServerLevel level, BlockPos pos, BlockState state) {
-        var players = level.getPlayers(p -> p.blockPosition().closerThan(pos, 64));
-
-        Component msg = Component.translatable("message.actionbar.unmarked")
-                .append(state.getBlock().getName())
-                .withStyle(ChatFormatting.GREEN)
-                .append(Component.translatable("component.actionbar.destroyed"));
-
-        for (var player : players) {
-            sendActionBarToPlayer(player, msg);
         }
     }
 
@@ -163,10 +152,12 @@ public final class HandsOffMyBlockNeoForge {
         }
     }
 
+    // Checks if villager has a job (workstation), a potential job (pathfinding), or a home (bed)
     private static boolean villagerHasMemoryForBlock(Villager villager, BlockPos pos, ServerLevel level) {
         return memoryMatches(villager, level, pos, MemoryModuleType.JOB_SITE)
                 || memoryMatches(villager, level, pos, MemoryModuleType.POTENTIAL_JOB_SITE)
-                || memoryMatches(villager, level, pos, MemoryModuleType.HOME);
+                || memoryMatches(villager, level, pos, MemoryModuleType.HOME)
+                || memoryMatches(villager, level, pos, MemoryModuleType.MEETING_POINT);
     }
 
     private static boolean memoryMatches(Villager villager, ServerLevel level, BlockPos pos, MemoryModuleType<GlobalPos> type) {
@@ -181,7 +172,15 @@ public final class HandsOffMyBlockNeoForge {
         level.sendParticles(ParticleTypes.ANGRY_VILLAGER, x, y, z, 6, 0.3, 0.1, 0.3, 0.0);
     }
 
-    private static void markBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf) {
+    private static void markBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf, BlockState state) {
+        if (isBed && otherHalf != null) {
+            BlockPos headPos = state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : otherHalf;
+            var poiManager = level.getPoiManager();
+            if (poiManager.getType(headPos).isPresent()) poiManager.release(headPos);
+        } else if (!isBed) {
+            var poiManager = level.getPoiManager();
+            if (poiManager.getType(pos).isPresent()) poiManager.release(pos);
+        }
         HandsOffMyBlockAccessManager.markBlock(level, pos);
         HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
         if (isBed && otherHalf != null) {
@@ -192,19 +191,17 @@ public final class HandsOffMyBlockNeoForge {
 
     private static void unmarkBlockAndInvalidate(ServerLevel level, BlockPos pos, boolean isBed, BlockPos otherHalf, BlockState state) {
         HandsOffMyBlockAccessManager.unmarkBlock(level, pos);
-        HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, pos, isBed);
 
         if (isBed && otherHalf != null) {
             HandsOffMyBlockAccessManager.unmarkBlock(level, otherHalf);
-            HandsOffMyVillagerMemoryHelper.invalidateNearbyVillagers(level, otherHalf, isBed);
-
-            // Bed POI release
-            var poiManager = level.getPoiManager();
-            BlockPos headPos = state.getValue(BedBlock.PART) == BedPart.HEAD ? pos : otherHalf;
-            if (poiManager.getType(headPos).isPresent()) poiManager.release(headPos);
+            // Refresh both bed halves to mirror break/place behavior for old beds.
+            HandsOffMyPoiRefreshHelper.refresh(level, pos, level.getBlockState(pos));
+            HandsOffMyPoiRefreshHelper.refresh(level, otherHalf, level.getBlockState(otherHalf));
+            HandsOffMyVillagerMemoryHelper.nudgeNearbyVillagersToReacquirePoi(level, pos);
+            HandsOffMyVillagerMemoryHelper.nudgeNearbyVillagersToReacquirePoi(level, otherHalf);
         } else if (!isBed) {
-            var poiManager = level.getPoiManager();
-            if (poiManager.getType(pos).isPresent()) poiManager.release(pos);
+            HandsOffMyPoiRefreshHelper.refresh(level, pos, level.getBlockState(pos));
+            HandsOffMyVillagerMemoryHelper.nudgeNearbyVillagersToReacquirePoi(level, pos);
         }
     }
 }

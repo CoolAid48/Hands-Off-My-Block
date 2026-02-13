@@ -5,7 +5,7 @@ license = "MIT"
 
 [[mods]]
 modId = "handsoffmyblock"
-version = "0.2.1"
+version = "${version}"
 displayName = "Hands Off My Block"
 authors = "CoolAid48"
 credits = "Mod icon by PurpleSquirrel1503"

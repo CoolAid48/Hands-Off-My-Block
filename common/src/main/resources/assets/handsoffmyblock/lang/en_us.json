@@ -22,7 +22,12 @@
   "message.actionbar.bedToggle": "Bed Marking: ",
   "message.actionbar.tweakToggle": "Pathfinding Tweaks: ",
   "message.actionbar.showMarkings": "Show Markings: ",
-  "component.actionbar.destroyed": " §e(Destroyed)",
+  "component.actionbar.broken": "Broken",
+  "component.actionbar.explosion": "Exploded",
+  "component.actionbar.fire": "Burned",
+  "component.actionbar.piston": "Pushed",
+  "component.actionbar.replaced": "Replaced",
+  "component.actionbar.unknown": "Destroyed",
   "component.actionbar.enabled": "Enabled",
   "component.actionbar.disabled": "Disabled",
 

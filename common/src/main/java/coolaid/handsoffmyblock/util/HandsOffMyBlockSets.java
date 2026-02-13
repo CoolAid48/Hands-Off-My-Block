@@ -10,6 +10,7 @@ public class HandsOffMyBlockSets {
 
     static {
         WORKSTATIONS.add(Blocks.BARREL);
+        WORKSTATIONS.add(Blocks.BELL);
         WORKSTATIONS.add(Blocks.BLAST_FURNACE);
         WORKSTATIONS.add(Blocks.BREWING_STAND);
         WORKSTATIONS.add(Blocks.CARTOGRAPHY_TABLE);

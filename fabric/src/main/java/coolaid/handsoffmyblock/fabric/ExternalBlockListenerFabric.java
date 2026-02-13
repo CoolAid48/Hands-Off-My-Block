@@ -23,8 +23,10 @@ public final class ExternalBlockListenerFabric {
                 // if (!current.equals(last)) {
                 if (current.getBlock() != last.getBlock()) {
                     DestroyReason reason = HandsOffMyBlockAccessManager.consumeReason(level, pos);
-                    HandsOffMyBlockAccessManager.unmarkExternallyDestroyed(level, pos, reason
-                    );
+                    if (reason == DestroyReason.UNKNOWN) {
+                        reason = HandsOffMyBlockAccessManager.inferReasonFromCurrentState(current);
+                    }
+                    HandsOffMyBlockAccessManager.unmarkExternallyDestroyed(level, pos, reason);
                 }
             }
         });

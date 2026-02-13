@@ -6,7 +6,8 @@
   "mixins": [
     "HandsOffMyPoiManagerMixin",
     "HandsOffMyServerLevelMixin",
-    "HandsOffMyVillagerMixin"
+    "HandsOffMyVillagerMixin",
+    "HandsOffMyServerLevelSetBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

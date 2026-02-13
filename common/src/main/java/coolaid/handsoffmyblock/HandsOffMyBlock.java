@@ -11,6 +11,7 @@ public class HandsOffMyBlock {
     public static void init() {
         HandsOffMyConfigManager.load();
 
-        LOGGER.info("Initializing Hands Off My Block");
+        LOGGER.info("Getting marked POI data!");
+        LOGGER.info("Hands off! Initializing HOMB");
     }
 }

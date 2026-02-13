@@ -26,6 +26,9 @@ public final class ExternalBlockListenerNeoForge {
             // if (!current.equals(last)) {
             if (current.getBlock() != last.getBlock()) {
                 DestroyReason reason = HandsOffMyBlockAccessManager.consumeReason(level, pos);
+                if (reason == DestroyReason.UNKNOWN) {
+                    reason = HandsOffMyBlockAccessManager.inferReasonFromCurrentState(current);
+                }
                 HandsOffMyBlockAccessManager.unmarkExternallyDestroyed(level, pos, reason);
             }
         }
