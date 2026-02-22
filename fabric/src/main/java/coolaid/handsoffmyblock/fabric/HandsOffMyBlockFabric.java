@@ -2,18 +2,14 @@ package coolaid.handsoffmyblock.fabric;
 
 import coolaid.handsoffmyblock.HandsOffMyBlock;
 import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
-import coolaid.handsoffmyblock.fabric.client.ConfigScreenFabric;
-import coolaid.handsoffmyblock.fabric.client.HandsOffMyBlockFabricClient;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockAccessManager;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
 import coolaid.handsoffmyblock.util.HandsOffMyPoiRefreshHelper;
 import coolaid.handsoffmyblock.util.HandsOffMyVillagerMemoryHelper;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -105,12 +101,6 @@ public final class HandsOffMyBlockFabric implements ModInitializer {
         });
 
         ExternalBlockListenerFabric.register();
-
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (HandsOffMyBlockFabricClient.openConfig != null && HandsOffMyBlockFabricClient.openConfig.consumeClick()) {
-                Minecraft.getInstance().setScreen(new ConfigScreenFabric(Minecraft.getInstance().screen));
-            }
-        });
     }
 
     public static void sendActionBarToPlayer(net.minecraft.world.entity.player.Player player, Component message) {

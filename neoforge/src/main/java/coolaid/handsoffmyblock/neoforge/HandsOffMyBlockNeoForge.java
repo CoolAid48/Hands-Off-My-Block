@@ -2,14 +2,11 @@ package coolaid.handsoffmyblock.neoforge;
 
 import coolaid.handsoffmyblock.HandsOffMyBlock;
 import coolaid.handsoffmyblock.config.HandsOffMyConfigManager;
-import coolaid.handsoffmyblock.neoforge.client.ConfigScreenNeoForge;
-import coolaid.handsoffmyblock.neoforge.client.HandsOffMyBlockNeoForgeClient;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockAccessManager;
 import coolaid.handsoffmyblock.util.HandsOffMyBlockSets;
 import coolaid.handsoffmyblock.util.HandsOffMyPoiRefreshHelper;
 import coolaid.handsoffmyblock.util.HandsOffMyVillagerMemoryHelper;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -28,11 +25,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
@@ -43,24 +36,13 @@ public final class HandsOffMyBlockNeoForge {
     public static Item MARKER_ITEM = Items.STICK;
 
     public HandsOffMyBlockNeoForge(IEventBus modEventBus) {
-        // Register server-side and client-side setups
+        // Register server-side setup
         NeoForge.EVENT_BUS.addListener(this::onRightClickBlock);
         NeoForge.EVENT_BUS.addListener(this::onBlockBreak);
-        modEventBus.addListener(this::onClientSetup);
 
         HandsOffMyBlock.init();
         reloadMarkerItemFromConfig();
         ExternalBlockListenerNeoForge.register();
-
-        // Register the config screen with NeoForge's built-in mod menu
-        ModList.get().getModContainerById("handsoffmyblock").ifPresent(mod -> {
-            mod.registerExtensionPoint(IConfigScreenFactory.class,
-                    (IConfigScreenFactory)(minecraft, parent) -> new ConfigScreenNeoForge(parent));
-        });
-    }
-
-    private void onClientSetup(FMLClientSetupEvent event) {
-        NeoForge.EVENT_BUS.addListener(this::onClientTick);
     }
 
     private void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
@@ -122,12 +104,6 @@ public final class HandsOffMyBlockNeoForge {
         if (HandsOffMyBlockAccessManager.isBlocked(serverLevel, pos)) {
             HandsOffMyBlockAccessManager.notifyBrokenUnmark(serverLevel, pos, state, HandsOffMyBlockNeoForge::sendActionBarToPlayer);
             unmarkBlockAndInvalidate(serverLevel, pos, isBed, isBed ? pos.relative(BedBlock.getConnectedDirection(state)) : null, state);
-        }
-    }
-
-    private void onClientTick(ClientTickEvent.Post event) {
-        if (HandsOffMyBlockNeoForgeClient.openConfig != null && HandsOffMyBlockNeoForgeClient.openConfig.consumeClick()) {
-            Minecraft.getInstance().setScreen(new ConfigScreenNeoForge(Minecraft.getInstance().screen));
         }
     }
 
