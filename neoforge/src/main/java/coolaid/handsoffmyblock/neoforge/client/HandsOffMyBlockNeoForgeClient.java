@@ -63,8 +63,12 @@ public final class HandsOffMyBlockNeoForgeClient {
             return;
         }
 
+        boolean remoteServer = client.getCurrentServer() != null && !client.hasSingleplayerServer();
+
         if (openConfig.consumeClick()) {
-            client.setScreen(new ConfigScreenNeoForge(client.screen));
+            if (!remoteServer) {
+                client.setScreen(new ConfigScreenNeoForge(client.screen));
+            }
         }
 
         toggleKey(
@@ -74,6 +78,14 @@ public final class HandsOffMyBlockNeoForgeClient {
                 v -> HandsOffMyConfigManager.get().actionBarMessages = v,
                 client
         );
+
+        if (remoteServer) {
+            while (true) {
+                if (!requireSneaking.consumeClick()) break;
+                // Consume clicks while connected to a remote server.
+            }
+            return;
+        }
 
         toggleKey(
                 requireSneaking,

@@ -67,6 +67,14 @@ public final class HandsOffMyBlockFabricClient implements ClientModInitializer {
         });
         // Require Sneaking Logic
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.getCurrentServer() != null && !client.hasSingleplayerServer()) {
+                while (true) {
+                    if (!requireSneaking.consumeClick()) break;
+                    // Consume clicks while connected to a remote server.
+                }
+                return;
+            }
+
             while (requireSneaking.consumeClick()) {
                 Component enabled = Component.translatable("component.actionbar.enabled").withStyle(ChatFormatting.GREEN);
                 Component disabled = Component.translatable("component.actionbar.disabled").withStyle(ChatFormatting.RED);
@@ -91,6 +99,9 @@ public final class HandsOffMyBlockFabricClient implements ClientModInitializer {
             }
 
             if (openConfig.consumeClick()) {
+                if (client.getCurrentServer() != null && !client.hasSingleplayerServer()) {
+                    return;
+                }
                 Minecraft.getInstance().setScreen(new ConfigScreenFabric(Minecraft.getInstance().screen));
             }
         });

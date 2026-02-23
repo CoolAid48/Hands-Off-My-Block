@@ -1,8 +1,8 @@
 {
   "key.category.minecraft.handsoffmyblock": "Hands Off My Block",
   "key.handsoffmyblock.open_config": "Open Config Screen",
-  "key.handsoffmyblock.show_markings": "Toggle Show Markings",
-  "key.handsoffmyblock.require_sneaking": "Toggle Require Sneaking",
+  "key.handsoffmyblock.show_markings": "Show Markings",
+  "key.handsoffmyblock.require_sneaking": "Require Sneaking",
   "text.configScreen.title": "Hands Off My Block Config",
   "text.configScreen.label": "Input valid item ID",
 
