@@ -32,5 +32,6 @@
   "component.actionbar.disabled": "비활성화됨",
 
   "message.actionbar.configSaved": "§a설정이 저장되었습니다! §f표시 아이템: %s",
-  "message.actionbar.configFailed": "§c설정 저장 실패! §f유효하지 않은 아이템 ID입니다"
+  "message.actionbar.configFailed": "§c설정 저장 실패! §f유효하지 않은 아이템 ID입니다",
+  "message.actionbar.onServer": "멀티플레이어에서 이용 불가"
 }

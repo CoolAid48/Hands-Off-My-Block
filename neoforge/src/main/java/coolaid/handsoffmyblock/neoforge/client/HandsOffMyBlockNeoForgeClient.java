@@ -90,6 +90,12 @@ public final class HandsOffMyBlockNeoForgeClient {
     ) {
 
         if (!key.consumeClick()) return;
+
+        if (isOnServer(client)) {
+            sendUnavailableMessage(client);
+            return;
+        }
+
         boolean newValue = !currentValue;
 
         setter.accept(newValue);
@@ -103,6 +109,16 @@ public final class HandsOffMyBlockNeoForgeClient {
                     Component.translatable(messageKey).append(newValue ? enabled : disabled),
                     true
             );
+        }
+    }
+
+    private static boolean isOnServer(Minecraft client) {
+        return client.player != null && !client.hasSingleplayerServer();
+    }
+
+    private static void sendUnavailableMessage(Minecraft client) {
+        if (client.player != null) {
+            client.player.displayClientMessage(Component.translatable("message.actionbar.onServer").withStyle(ChatFormatting.DARK_RED), true);
         }
     }
 

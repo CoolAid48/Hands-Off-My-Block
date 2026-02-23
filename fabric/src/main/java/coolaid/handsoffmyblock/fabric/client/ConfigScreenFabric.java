@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -31,6 +32,8 @@ public class ConfigScreenFabric extends Screen {
     protected void init() {
         int centerX = this.width / 2;
         int y = this.height / 2 - 100;
+        boolean onServer = minecraft.player != null && !minecraft.hasSingleplayerServer();
+        Tooltip unavailableTooltip = Tooltip.create(Component.translatable("message.actionbar.onServer"));
 
         // Marker item label and EditBox for item ID input
         this.addRenderableWidget(new net.minecraft.client.gui.components.StringWidget(
@@ -42,6 +45,11 @@ public class ConfigScreenFabric extends Screen {
                 Component.literal(""));
         if (HandsOffMyConfigManager.get().markerItem != null) {
             markerInput.setValue(HandsOffMyConfigManager.get().markerItem.toString());
+        }
+        markerInput.active = !onServer;
+        markerInput.setEditable(!onServer);
+        if (onServer) {
+            markerInput.setTooltip(unavailableTooltip);
         }
         this.addRenderableWidget(markerInput);
 
@@ -57,8 +65,7 @@ public class ConfigScreenFabric extends Screen {
 
         // Top row: Block Marking (left) and Require Sneaking (right)
         Button workstationToggle = Button.builder(
-                Component.translatable("text.configButton.workstationToggle",
-                        Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")),
+                Component.translatable("text.configButton.workstationToggle", Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")),
                 btn -> {
                     HandsOffMyConfigManager.get().enableWorkstationMarking =
                             !HandsOffMyConfigManager.get().enableWorkstationMarking;
@@ -74,6 +81,10 @@ public class ConfigScreenFabric extends Screen {
                     }
                 }
         ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        workstationToggle.active = !onServer;
+        if (onServer) {
+            workstationToggle.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(workstationToggle);
 
         Button sneakToggle = Button.builder(
@@ -91,6 +102,10 @@ public class ConfigScreenFabric extends Screen {
                     }
                 }
         ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        sneakToggle.active = !onServer;
+        if (onServer) {
+            sneakToggle.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(sneakToggle);
 
         // Second row: Bed Marking (left) and Pathfinding Tweaks (right)
@@ -110,6 +125,10 @@ public class ConfigScreenFabric extends Screen {
                     }
                 }
         ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        bedToggle.active = !onServer;
+        if (onServer) {
+            bedToggle.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(bedToggle);
 
         Button tweakToggle = Button.builder(
@@ -127,6 +146,10 @@ public class ConfigScreenFabric extends Screen {
                     }
                 }
         ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        tweakToggle.active = !onServer;
+        if (onServer) {
+            tweakToggle.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(tweakToggle);
 
         // Third row: Show Markings (left)
@@ -146,16 +169,21 @@ public class ConfigScreenFabric extends Screen {
                     }
                 }
         ).bounds(startX, y, buttonWidth, buttonHeight).build();
+        actionBarToggle.active = !onServer;
+        if (onServer) {
+            actionBarToggle.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(actionBarToggle);
 
         // Save and Exit button (centered)
-        this.addRenderableWidget(Button.builder(
+        Button saveAndExitButton = Button.builder(
                 Component.translatable("text.configButton.save_and_exit"),
                 btn -> {
                     saveConfig();
                     minecraft.setScreen(parent);
                 }
-        ).bounds(centerX - 60, y + buttonHeight + 4, 120, 20).build());
+        ).bounds(centerX - 60, y + buttonHeight + 4, 120, 20).build();
+        this.addRenderableWidget(saveAndExitButton);
 
         // Status text widget
         this.addRenderableWidget(new StringWidget(
@@ -213,12 +241,14 @@ public class ConfigScreenFabric extends Screen {
         super.render(graphics, mouseX, mouseY, delta);
 
         // Screen title component
-        int textWidth = this.font.width(title) + 25; // Include +25 to fit bold formatting
         Component title = Component.translatable("text.configScreen.title").withStyle(ChatFormatting.BOLD);
-        titleWidget = new StringWidget(
-                (this.width - textWidth) / 2, 10, textWidth, 9, title, this.font
-        );
-        this.addRenderableWidget(titleWidget);
+        int textWidth = this.font.width(title) + 25; // Include +25 to fit bold formatting
+        if (titleWidget == null) {
+            titleWidget = new StringWidget(
+                    (this.width - textWidth) / 2, 10, textWidth, 9, title, this.font
+            );
+            this.addRenderableWidget(titleWidget);
+        }
     }
 
     @Override

@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -31,6 +32,8 @@ public class ConfigScreenNeoForge extends Screen {
     protected void init() {
         int centerX = this.width / 2;
         int y = this.height / 2 - 100;
+        boolean onServer = minecraft.player != null && !minecraft.hasSingleplayerServer();
+        Tooltip unavailableTooltip = Tooltip.create(Component.translatable("message.actionbar.onServer"));
 
         // Marker item label
         this.addRenderableWidget(new StringWidget(
@@ -45,6 +48,11 @@ public class ConfigScreenNeoForge extends Screen {
         if (HandsOffMyConfigManager.get().markerItem != null) {
             markerInput.setValue(HandsOffMyConfigManager.get().markerItem.toString());
         }
+        markerInput.active = !onServer;
+        markerInput.setEditable(!onServer);
+        if (onServer) {
+            markerInput.setTooltip(unavailableTooltip);
+        }
         this.addRenderableWidget(markerInput);
 
         y += 45;
@@ -58,48 +66,63 @@ public class ConfigScreenNeoForge extends Screen {
         Component disabled = Component.translatable("component.actionbar.disabled").withStyle(ChatFormatting.RED);
 
         // Top row: Workstation & Sneak toggles
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("text.configButton.workstationToggle",
-                        Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")),
-                btn -> toggleWorkstation(btn, enabled, disabled)
-        ).bounds(startX, y, buttonWidth, buttonHeight).build());
+        Button workstationToggle = Button.builder(
+                Component.translatable("text.configButton.workstationToggle", Component.translatable(HandsOffMyConfigManager.get().enableWorkstationMarking ? "component.configButton.yes" : "component.configButton.no")),
+                btn -> toggleWorkstation(btn, enabled, disabled)).bounds(startX, y, buttonWidth, buttonHeight).build();
+        workstationToggle.active = !onServer;
+        if (onServer) {
+            workstationToggle.setTooltip(unavailableTooltip);
+        }
+        this.addRenderableWidget(workstationToggle);
 
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("text.configButton.sneakToggle",
-                        Component.translatable(HandsOffMyConfigManager.get().requireSneaking ? "component.configButton.yes" : "component.configButton.no")),
-                btn -> toggleSneak(btn, enabled, disabled)
-        ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build());
+        Button sneakToggle = Button.builder(
+                Component.translatable("text.configButton.sneakToggle", Component.translatable(HandsOffMyConfigManager.get().requireSneaking ? "component.configButton.yes" : "component.configButton.no")),
+                btn -> toggleSneak(btn, enabled, disabled)).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        sneakToggle.active = !onServer;
+        if (onServer) {
+            sneakToggle.setTooltip(unavailableTooltip);
+        }
+        this.addRenderableWidget(sneakToggle);
 
         // Second row: Bed & Pathfinding
         y += buttonHeight + 5;
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("text.configButton.bedToggle",
-                        Component.translatable(HandsOffMyConfigManager.get().enableBedMarking ? "component.configButton.yes" : "component.configButton.no")),
-                btn -> toggleBed(btn, enabled, disabled)
-        ).bounds(startX, y, buttonWidth, buttonHeight).build());
+        Button bedToggle = Button.builder(
+                Component.translatable("text.configButton.bedToggle", Component.translatable(HandsOffMyConfigManager.get().enableBedMarking ? "component.configButton.yes" : "component.configButton.no")),
+                btn -> toggleBed(btn, enabled, disabled)).bounds(startX, y, buttonWidth, buttonHeight).build();
+        bedToggle.active = !onServer;
+        if (onServer) {
+            bedToggle.setTooltip(unavailableTooltip);
+        }
+        this.addRenderableWidget(bedToggle);
 
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("text.configButton.tweakToggle",
-                        Component.translatable(HandsOffMyConfigManager.get().pathfindingTweaks ? "component.configButton.yes" : "component.configButton.no")),
-                btn -> toggleTweak(btn, enabled, disabled)
-        ).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build());
+        Button tweakToggle = Button.builder(
+                Component.translatable("text.configButton.tweakToggle", Component.translatable(HandsOffMyConfigManager.get().pathfindingTweaks ? "component.configButton.yes" : "component.configButton.no")),
+                btn -> toggleTweak(btn, enabled, disabled)).bounds(startX + buttonWidth + buttonSpacing, y, buttonWidth, buttonHeight).build();
+        tweakToggle.active = !onServer;
+        if (onServer) {
+            tweakToggle.setTooltip(unavailableTooltip);
+        }
+        this.addRenderableWidget(tweakToggle);
 
         // Third row: Action Bar toggle
         y += buttonHeight + 5;
-        this.addRenderableWidget(Button.builder(
-                Component.translatable("text.configButton.showMarkings",
-                        Component.translatable(HandsOffMyConfigManager.get().actionBarMessages ? "component.configButton.yes" : "component.configButton.no")),
-                btn -> toggleActionBar(btn, enabled, disabled)
-        ).bounds(startX, y, buttonWidth, buttonHeight).build());
+        Button actionBarToggle = Button.builder(
+                Component.translatable("text.configButton.showMarkings", Component.translatable(HandsOffMyConfigManager.get().actionBarMessages ? "component.configButton.yes" : "component.configButton.no")),
+                btn -> toggleActionBar(btn, enabled, disabled)).bounds(startX, y, buttonWidth, buttonHeight).build();
+        actionBarToggle.active = !onServer;
+        if (onServer) {
+            actionBarToggle.setTooltip(unavailableTooltip);
+        }
+        this.addRenderableWidget(actionBarToggle);
 
         // Save & Exit button
-        this.addRenderableWidget(Button.builder(
+        Button saveAndExitButton = Button.builder(
                 Component.translatable("text.configButton.save_and_exit"),
                 btn -> {
                     saveConfig();
                     minecraft.setScreen(parent);
-                }
-        ).bounds(centerX - 60, y + buttonHeight + 4, 120, 20).build());
+                }).bounds(centerX - 60, y + buttonHeight + 4, 120, 20).build();
+        this.addRenderableWidget(saveAndExitButton);
 
         // Status text widget
         this.addRenderableWidget(new StringWidget(centerX - 100, y, 200, 20, statusText, font) {

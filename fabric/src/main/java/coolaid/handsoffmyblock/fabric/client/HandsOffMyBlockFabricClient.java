@@ -50,6 +50,11 @@ public final class HandsOffMyBlockFabricClient implements ClientModInitializer {
         // Show Markings Logic
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (showMarkings.consumeClick()) {
+                if (isOnServer(client)) {
+                    sendUnavailableMessage(client);
+                    continue;
+                }
+
                 Component enabled = Component.translatable("component.actionbar.enabled").withStyle(ChatFormatting.GREEN);
                 Component disabled = Component.translatable("component.actionbar.disabled").withStyle(ChatFormatting.RED);
 
@@ -68,6 +73,11 @@ public final class HandsOffMyBlockFabricClient implements ClientModInitializer {
         // Require Sneaking Logic
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (requireSneaking.consumeClick()) {
+                if (isOnServer(client)) {
+                    sendUnavailableMessage(client);
+                    continue;
+                }
+
                 Component enabled = Component.translatable("component.actionbar.enabled").withStyle(ChatFormatting.GREEN);
                 Component disabled = Component.translatable("component.actionbar.disabled").withStyle(ChatFormatting.RED);
 
@@ -94,5 +104,15 @@ public final class HandsOffMyBlockFabricClient implements ClientModInitializer {
                 Minecraft.getInstance().setScreen(new ConfigScreenFabric(Minecraft.getInstance().screen));
             }
         });
+    }
+
+    private static boolean isOnServer(Minecraft client) {
+        return client.player != null && !client.hasSingleplayerServer();
+    }
+
+    private static void sendUnavailableMessage(Minecraft client) {
+        if (client.player != null) {
+            client.player.displayClientMessage(Component.translatable("message.actionbar.onServer").withStyle(ChatFormatting.DARK_RED), true);
+        }
     }
 }
