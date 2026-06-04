@@ -4,12 +4,17 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "mixins": [
+    "AvoidEntityGoalMixin",
+    "FarmlandBlockMixin",
+    "IronGolemMixin",
     "LevelMixin",
+    "MobMixin",
     "PoiManagerMixin",
     "RaidMixin",
     "ServerLevelMixin",
     "TraderLlamaMixin",
     "VillagerMixin",
+    "VillagerHostilesSensorMixin",
     "WanderingTraderMixin"
   ],
   "injectors": {

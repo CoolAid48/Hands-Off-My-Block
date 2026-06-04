@@ -58,12 +58,16 @@ public final class ConfigManager {
         @SerialEntry
         public boolean pathfindingTweaks = false;
         @SerialEntry
+        public double cropTrampleThreshold = 0.5D;
+        @SerialEntry
+        public boolean ignoreUnarmedPillagers = false;
+        @SerialEntry
         public boolean actionBarMessages = true;
         @SerialEntry
         public int raidSpawnRadius = 96;
         @SerialEntry
-        public boolean namedTraders = true;
+        public boolean namedTraders = false;
         @SerialEntry
-        public boolean namedTraderLlamas = true;
+        public boolean namedTraderLlamas = false;
     }
 }

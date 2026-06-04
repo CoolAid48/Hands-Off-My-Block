@@ -4,6 +4,7 @@ import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.controller.DoubleFieldControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.StringControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
@@ -42,12 +43,11 @@ public final class ConfigScreenFactory {
                         .option(createSneakOption())
                         .build())
                 .group(OptionGroup.createBuilder()
-                        .name(Component.translatable("config.category.pathfindingChanges"))
-                        .option(createPathfindingOption())
-                        .build())
-                .group(OptionGroup.createBuilder()
-                        .name(Component.translatable("config.category.miscTweaks"))
+                        .name(Component.translatable("config.category.mobBehaviorChanges"))
+                        .option(createCropTrampleThresholdOption())
                         .option(createRaidRadiusOption())
+                        .option(createIgnoreUnarmedPillagersOption())
+                        .option(createPathfindingOption())
                         .option(createNamedTradersOption())
                         .option(createNamedTraderLlamasOption())
                         .build())
@@ -86,6 +86,20 @@ public final class ConfigScreenFactory {
                         .range(0, 96)
                         .step(1)
                         .formatValue(value -> Component.literal(String.valueOf(value))))
+                .build();
+    }
+
+    private static Option<Double> createCropTrampleThresholdOption() {
+        return Option.<Double>createBuilder()
+                .name(Component.translatable("config.button.cropTrampleThreshold"))
+                .description(dev.isxander.yacl3.api.OptionDescription.of(Component.translatable("config.description.cropTrampleThreshold")))
+                .binding(
+                        ConfigManager.defaults().cropTrampleThreshold,
+                        () -> ConfigManager.get().cropTrampleThreshold,
+                        value -> ConfigManager.get().cropTrampleThreshold = value
+                )
+                .controller(option -> DoubleFieldControllerBuilder.create(option)
+                        .min(0.0D))
                 .build();
     }
 
@@ -146,6 +160,16 @@ public final class ConfigScreenFactory {
                 () -> ConfigManager.get().pathfindingTweaks,
                 value -> ConfigManager.get().pathfindingTweaks = value,
                 ConfigManager.defaults().pathfindingTweaks
+        );
+    }
+
+    private static Option<Boolean> createIgnoreUnarmedPillagersOption() {
+        return createBooleanOption(
+                "config.button.ignoreUnarmedPillagers",
+                "config.description.ignoreUnarmedPillagers",
+                () -> ConfigManager.get().ignoreUnarmedPillagers,
+                value -> ConfigManager.get().ignoreUnarmedPillagers = value,
+                ConfigManager.defaults().ignoreUnarmedPillagers
         );
     }
 
