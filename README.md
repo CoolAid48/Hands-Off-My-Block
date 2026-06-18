@@ -19,11 +19,10 @@
 [<img alt="Chat with me in Discord" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/social/discord-plural_vector.svg"/>](https://discord.gg/J2SGshKNah)
 [<img alt="Watch me on Twitch" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3.2.0/assets/cozy/social/twitch-singular_vector.svg"/>](https://www.twitch.tv/coolaid48)
 
-![server hosting partner](https://cdn.modrinth.com/data/cached_images/8e85210a65b7c17998987c57b7571ba2fbd19bfb.png)
-
-
 ### Will I backport this mod?
 Probably not, but maybe. If it's requested then I'm more likely to get around to it. Like most of my mods, I created this collection of features to provide some tweaks I enjoy using on my personal Hardcore world, so things like proper multiplayer compatibility and NeoForge support are not always guaranteed or fully tested.
 
 ### That being said, does it work on dedicated servers?
 The original **Hands Off My Block** as well as **Raid Spawn Radius** mod implementations were tested on dedicated server environments and confirmed to work fine. However, further testing would be appreciated.
+
+![server hosting partner](https://cdn.modrinth.com/data/cached_images/8e85210a65b7c17998987c57b7571ba2fbd19bfb.png)
