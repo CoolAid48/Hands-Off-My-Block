@@ -25,4 +25,5 @@ Probably not, but maybe. If it's requested then I'm more likely to get around to
 ### That being said, does it work on dedicated servers?
 The original **Hands Off My Block** as well as **Raid Spawn Radius** mod implementations were tested on dedicated server environments and confirmed to work fine. However, further testing would be appreciated.
 
+## Looking for a server host?
 ![server hosting partner](https://cdn.modrinth.com/data/cached_images/8e85210a65b7c17998987c57b7571ba2fbd19bfb.png)
