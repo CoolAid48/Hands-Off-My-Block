@@ -108,7 +108,7 @@ public final class VillagePillageTweaksNeoForge {
         event.setCancellationResult(InteractionResult.SUCCESS);
     }
 
-    private void onBlockBreak(BlockEvent.BreakEvent event) {
+    private void onBlockBreak(BlockEvent.BlockToolModificationEvent event) {
         if (event.getLevel().isClientSide()) return;
         if (!(event.getLevel() instanceof ServerLevel serverLevel)) return;
 

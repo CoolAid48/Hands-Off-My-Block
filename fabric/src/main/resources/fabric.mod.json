@@ -31,7 +31,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.4",
-    "minecraft": "~26.1",
+    "minecraft": "~26.2",
     "fabric-api": "*"
   },
   "custom": {
@@ -39,7 +39,8 @@
       "links": {
         "modmenu.donate" : "https://ko-fi.com/coolaid48",
         "modmenu.discord": "https://discord.gg/J2SGshKNah",
-        "modmenu.modrinth": "https://modrinth.com/mod/village-pillage-tweaks"
+        "modmenu.modrinth": "https://modrinth.com/mod/village-pillage-tweaks",
+        "modmenu.wiki": "https://coolaid.live/docs/village-pillage-tweaks"
       }
     }
   }

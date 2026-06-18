@@ -1,6 +1,6 @@
 # CoolAid's Village and Pillage Tweaks
 ![](https://img.shields.io/badge/Loaders-Fabric/Quilt/NeoForge-darkgreen?style=for-the-badge)
-![](https://img.shields.io/badge/Versions-26.1.x-darkgreen?style=for-the-badge)
+![](https://img.shields.io/badge/Versions-26.1.x_|_26.2.x-darkgreen?style=for-the-badge)
 ![](https://img.shields.io/badge/Environments-Client_+_Server-darkgreen?style=for-the-badge)
 
 ### A collection of server-side tweaks to villagers and pillagers!
